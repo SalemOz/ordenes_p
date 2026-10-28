@@ -1,21 +1,96 @@
-<ion-header [translucent]="true">
-  <ion-toolbar>
-    <ion-title> Blank </ion-title>
+<!-- ENCABEZADO -->
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-title>Órdenes de compra</ion-title>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">Blank</ion-title>
-    </ion-toolbar>
-  </ion-header>
+<ion-content class="ion-padding">
 
-  <div id="container">
-    <strong>Ready to create an app?</strong>
-    <p>
-      Start with Ionic
-      <a target="_blank" rel="noopener noreferrer" href="https://ionicframework.com/docs/components">UI Components</a>
-    </p>
-  </div>
+  <!-- GRILLA: en celular las columnas se apilan, en tableta quedan lado a lado -->
+  <ion-grid>
+    <ion-row>
+
+      <!-- Columna 1: tarjeta con la métrica -->
+      <ion-col size="12" size-md="6">
+        <ion-card>
+          <ion-card-header>
+            <ion-card-title>Resumen</ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            <p>Órdenes: <strong>{{ ordenesFiltradas.length }}</strong></p>
+            <p>Total ventas: <strong>{{ totalVentas | currency:'COP':'symbol-narrow':'1.0-0' }}</strong></p>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+
+      <!-- Columna 2: filtros por monto -->
+      <ion-col size="12" size-md="6">
+        <ion-item>
+          <ion-input label="Monto mínimo" label-placement= "floating" placeholder="Ej: 30000" type="number"
+            [(ngModel)]="montoMin" (ngModelChange)="aplicarFiltros()"></ion-input>
+        </ion-item>
+
+        <ion-item>
+          <ion-input label="Monto máximo" label-placement= "floating" placeholder="Ej: 60000"type="number"
+            [(ngModel)]="montoMax" (ngModelChange)="aplicarFiltros()"></ion-input>
+        </ion-item>
+
+        <!-- Mensaje de error: solo aparece si "error" tiene texto -->
+        <ion-text color="danger" *ngIf="error"><p>{{ error }}</p></ion-text>
+
+        <ion-button expand="block" fill="outline" (click)="limpiarFiltros()">
+          Limpiar filtros
+        </ion-button>
+      </ion-col>
+
+    </ion-row>
+  </ion-grid>
+
+  <!-- LISTA: *ngFor repite un ion-item por cada orden -->
+  <ion-list>
+    <ion-item *ngFor="let o of ordenesFiltradas" button (click)="abrirModal(o)">
+
+      <ion-avatar slot="start">
+        <img [src]="'https://picsum.photos/seed/' + o.id + '/80'" alt="producto" />
+      </ion-avatar>
+
+      <ion-label>
+        <h2>{{ o.producto }}</h2>
+        <p>{{ o.cliente }} · {{ o.monto | currency:'COP':'symbol-narrow':'1.0-0' }}</p>
+      </ion-label>
+
+      <!-- Rojo si stock < 5, verde si no -->
+      <ion-badge slot="end" [color]="o.stock < 5 ? 'danger' : 'success'">
+        Stock: {{ o.stock }}
+      </ion-badge>
+
+    </ion-item>
+  </ion-list>
+
+  <!-- MODAL DE FACTURACIÓN: se abre cuando modalAbierto es true -->
+  <ion-modal [isOpen]="modalAbierto" (didDismiss)="cerrarModal()">
+    <ng-template>
+      <ion-header>
+        <ion-toolbar>
+          <ion-title>Facturación</ion-title>
+          <ion-buttons slot="end">
+            <ion-button (click)="cerrarModal()">Cerrar</ion-button>
+          </ion-buttons>
+        </ion-toolbar>
+      </ion-header>
+
+      <ion-content class="ion-padding" *ngIf="seleccionada">
+        <h2>Orden #{{ seleccionada.id }}</h2>
+        <p>Cliente: {{ seleccionada.cliente }}</p>
+        <p>Producto: {{ seleccionada.producto }}</p>
+        <hr />
+        <p>Subtotal: {{ seleccionada.monto | currency:'COP':'symbol-narrow':'1.0-0' }}</p>
+        <p>IVA (19 %): {{ iva | currency:'COP':'symbol-narrow':'1.0-0' }}</p>
+        <h3>Total: {{ total | currency:'COP':'symbol-narrow':'1.0-0' }}</h3>
+        <ion-button expand="block" (click)="facturar()">Facturar</ion-button>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+
 </ion-content>
